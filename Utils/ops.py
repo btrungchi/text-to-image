@@ -30,8 +30,9 @@ class batch_norm(object):
 					batch_mean, batch_var = tf.nn.moments(x, [0, 1, 2], name='moments')
 				except:
 					batch_mean, batch_var = tf.nn.moments(x, [0, 1], name='moments')
-					
-				ema_apply_op = self.ema.apply([batch_mean, batch_var])
+				
+				with tf.variable_scope(tf.get_variable_scope(), reuse=False):
+					ema_apply_op = self.ema.apply([batch_mean, batch_var])
 				self.ema_mean, self.ema_var = self.ema.average(batch_mean), self.ema.average(batch_var)
 
 				with tf.control_dependencies([ema_apply_op]):
@@ -66,7 +67,7 @@ def conv_cond_concat(x, y):
 	"""Concatenate conditioning vector on feature map axis."""
 	x_shapes = x.get_shape()
 	y_shapes = y.get_shape()
-	return tf.concat(3, [x, y*tf.ones([x_shapes[0], x_shapes[1], x_shapes[2], y_shapes[3]])])
+	return tf.concat([x, y*tf.ones([x_shapes[0], x_shapes[1], x_shapes[2], y_shapes[3]])], 1)
 
 def conv2d(input_, output_dim, 
 		   k_h=5, k_w=5, d_h=2, d_w=2, stddev=0.02,
